@@ -52,38 +52,40 @@ app.post('/img', upload.single('img'), async (req, res) => {
       img_url: imageUrl
     });
   } catch (error) {
-    res.status(500).json({ error: '업로드 실패' });
+    res.status(500).json({ message: '업로드 실패' });
   }
 });
 
 // 이미지 삭제
 app.delete('/img', async (req, res) => {
   try {
-    const fileName = req.query.file_name;
+    const images = req.body;
 
-    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/images/${fileName}`;
+    for (const image of images) {
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/images/${image}`;
 
-    const response = await axios.get(url + `?ref=${BRANCH}`, {
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`
-      }
-    });
+      const response = await axios.get(url + `?ref=${BRANCH}`, {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`
+        }
+      });
 
-    const sha = response.data.sha;
+      const sha = response.data.sha;
 
-    await axios.delete(url, {
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`
-      },
-      data: {
-        message: `delete image: ${fileName}`,
-        sha,
-        branch: BRANCH
-      }
-    });
+      await axios.delete(url, {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`
+        },
+        data: {
+          message: `delete image: ${image}`,
+          sha,
+          branch: BRANCH
+        }
+      });
+    }
     res.status(200).json({ message: '삭제 성공' });
   } catch (error) {
-    res.status(500).json({ error: '삭제 실패' });
+    res.status(500).json({ message: '삭제 실패' });
   }
 });
 
