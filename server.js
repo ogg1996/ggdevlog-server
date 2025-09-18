@@ -109,7 +109,15 @@ app.delete('/post/:id', async (req, res) => {
 });
 
 // 게시판 목록 불러오기
-app.get('/board', async (req, res) => {});
+app.get('/board', async (req, res) => {
+  const { data, error } = await supabase.from('board').select('id, name');
+
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시판 목록 불러오기 실패' });
+  res.json({ success: true, data });
+});
 
 // 게시판 추가
 app.post('/board', async (req, res) => {});
