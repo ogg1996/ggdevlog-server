@@ -44,10 +44,10 @@ app.get('/post', async (req, res) => {
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error)
-    return res.status(500).json({ message: '게시글 목록 불러오기 실패' });
+  if (error) return res.status(500).json({ success: false });
 
   res.json({
+    success: true,
     page,
     limit,
     total: count,
@@ -65,8 +65,8 @@ app.get('/post/:id', async (req, res) => {
     .eq('id', Number(id))
     .single();
 
-  if (error) return res.status(500).json({ message: '게시글 불러오기 실패' });
-  res.json(data);
+  if (error) return res.status(500).json({ success: false });
+  res.json({ success: true, data });
 });
 
 // 게시글 추가
@@ -74,11 +74,14 @@ app.post('/post', async (req, res) => {
   const { board_id, title, thumbnail, description, content, images } = req.body;
   const { error } = await supabase
     .from('post')
-    .insert([{ board_id, title, thumbnail, description, content, images }]);
+    .insert({ board_id, title, thumbnail, description, content, images });
 
-  if (error) return res.status(500).json({ message: '게시글 작성 실패' });
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시글 작성 실패' });
 
-  res.json({ message: '게시글 작성 성공' });
+  res.json({ success: true, message: '게시글 작성 성공' });
 });
 
 // 게시글 수정
@@ -88,45 +91,75 @@ app.put('/post/:id', async (req, res) => {
 
   const { error } = await supabase
     .from('post')
-    .update([{ board_id, title, thumbnail, description, content, images }])
+    .update({ board_id, title, thumbnail, description, content, images })
     .eq('id', Number(id));
 
-  if (error) return res.status(500).json({ message: '게시글 수정 실패' });
-  res.json({ message: '게시글 수정 성공' });
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시글 수정 실패' });
+  res.json({ success: true, message: '게시글 수정 성공' });
 });
 
 // 게시글 삭제
 app.delete('/post/:id', async (req, res) => {
   const { id } = req.params;
-  const { data, error } = await supabase
-    .from('post')
-    .delete()
-    .eq('id', Number(id));
-
-  if (error) return res.status(500).json({ message: '게시글 삭제 실패' });
-
-  res.json({ message: '게시글 삭제 성공' });
-});
-
-// 게시판 목록 불러오기
-app.get('/board', async (req, res) => {
-  const { data, error } = await supabase.from('board').select('id, name');
+  const { error } = await supabase.from('post').delete().eq('id', Number(id));
 
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시판 목록 불러오기 실패' });
+      .json({ success: false, message: '게시글 삭제 실패' });
+
+  res.json({ success: true, message: '게시글 삭제 성공' });
+});
+
+// 게시판 목록 불러오기
+app.get('/board', async (req, res) => {
+  const { data, error } = (
+    await supabase.from('board').select('id, name')
+  ).order('name', { ascending: true });
+
+  if (error) return res.status(500).json({ success: false });
   res.json({ success: true, data });
 });
 
 // 게시판 추가
-app.post('/board', async (req, res) => {});
+app.post('/board', async (req, res) => {
+  const { name } = req.body;
+  const { error } = await supabase.from('board').insert({ name });
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시판 추가 실패' });
+  res.json({ success: true, message: '게시판 추가 성공' });
+});
 
 // 게시판 수정
-app.put('/board/:id', async (req, res) => {});
+app.put('/board/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  const { error } = await supabase
+    .from('board')
+    .update({ name })
+    .eq('id', Number(id));
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시판 수정 실패' });
+  res.json({ success: true, message: '게시판 수정 성공' });
+});
 
 // 게시판 삭제
-app.delete('/board/:id', async (req, res) => {});
+app.delete('/board/:id', async (req, res) => {
+  const { id } = req.params;
+  const { error } = await supabase.from('board').delete().eq('id', Number(id));
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '게시판 삭제 실패' });
+  res.json({ success: true, message: '게시판 삭제 성공' });
+});
 
 // 이미지 업로드
 app.post('/img', upload.single('img'), async (req, res) => {
