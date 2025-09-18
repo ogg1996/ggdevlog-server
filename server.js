@@ -82,7 +82,18 @@ app.post('/post', async (req, res) => {
 });
 
 // 게시글 수정
-app.put('/post/:id', async (req, res) => {});
+app.put('/post/:id', async (req, res) => {
+  const { id } = req.params;
+  const { board_id, title, thumbnail, description, content, images } = req.body;
+
+  const { error } = await supabase
+    .from('post')
+    .update([{ board_id, title, thumbnail, description, content, images }])
+    .eq('id', Number(id));
+
+  if (error) return res.status(500).json({ message: '게시글 수정 실패' });
+  res.json({ message: '게시글 수정 성공' });
+});
 
 // 게시글 삭제
 app.delete('/post/:id', async (req, res) => {});
