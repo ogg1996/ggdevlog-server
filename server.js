@@ -26,9 +26,9 @@ const supabase = createClient(
 
 // 게시글 목록 불러오기
 app.get('/post', async (req, res) => {
-  const board = parseInt(req.query.board_id) || null;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 5;
+  const board = Number(req.query.board_id) || null;
+  const page = Number(req.query.page) || 1;
+  const limit = Number(req.query.limit) || 5;
 
   const from = (page - 1) * limit;
   const to = from + limit - 1;
@@ -56,7 +56,17 @@ app.get('/post', async (req, res) => {
 });
 
 // 게시글 상세보기
-app.get('/post/:id', async (req, res) => {});
+app.get('/post/:id', async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('post')
+    .select('*')
+    .eq('id', Number(id))
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
 
 // 게시글 추가
 app.post('/post', async (req, res) => {});
@@ -67,16 +77,16 @@ app.put('/post/:id', async (req, res) => {});
 // 게시글 삭제
 app.delete('/post/:id', async (req, res) => {});
 
-// 보드 불러오기
+// 게시판 목록 불러오기
 app.get('/board', async (req, res) => {});
 
-// 보드 추가
+// 게시판 추가
 app.post('/board', async (req, res) => {});
 
-// 보드 수정
+// 게시판 수정
 app.put('/board/:id', async (req, res) => {});
 
-// 보드 삭제
+// 게시판 삭제
 app.delete('/board/:id', async (req, res) => {});
 
 // 이미지 업로드
