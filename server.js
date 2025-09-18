@@ -44,7 +44,8 @@ app.get('/post', async (req, res) => {
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error)
+    return res.status(500).json({ message: '게시글 목록 불러오기 실패' });
 
   res.json({
     page,
@@ -64,12 +65,21 @@ app.get('/post/:id', async (req, res) => {
     .eq('id', Number(id))
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return res.status(500).json({ message: '게시글 불러오기 실패' });
   res.json(data);
 });
 
 // 게시글 추가
-app.post('/post', async (req, res) => {});
+app.post('/post', async (req, res) => {
+  const { board_id, title, thumbnail, description, content, images } = req.body;
+  const { error } = await supabase
+    .from('post')
+    .insert([{ board_id, title, thumbnail, description, content, images }]);
+
+  if (error) return res.status(500).json({ message: '게시글 작성 실패' });
+
+  res.json({ message: '게시글 작성 성공' });
+});
 
 // 게시글 수정
 app.put('/post/:id', async (req, res) => {});
