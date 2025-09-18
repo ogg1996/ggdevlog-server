@@ -25,7 +25,35 @@ const supabase = createClient(
 );
 
 // 게시글 목록 불러오기
-app.get('/post', async (req, res) => {});
+app.get('/post', async (req, res) => {
+  const board = parseInt(req.query.board_id) || null;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = supabase
+    .from('post')
+    .select('id, thumbnail, title, description, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  if (board) {
+    query = query.eq('board_id', board);
+  }
+
+  const { data, error, count } = await query.range(from, to);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  res.json({
+    page,
+    limit,
+    total: count,
+    totalPage: Math.ceil(count / limit),
+    data
+  });
+});
 
 // 게시글 상세보기
 app.get('/post/:id', async (req, res) => {});
