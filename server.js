@@ -1,12 +1,12 @@
+import { createClient } from '@supabase/supabase-js';
 import express from 'express';
 import multer from 'multer';
 import dotenv from 'dotenv';
+dotenv.config();
 import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
-
-dotenv.config();
 
 const app = express();
 const upload = multer({ dest: 'temp/' });
@@ -18,6 +18,38 @@ const GITHUB_TOKEN = process.env.GITHUB_API_TOKEN;
 const OWNER = 'ogg1996';
 const REPO = 'ggdevlog-img-uploads';
 const BRANCH = 'main';
+
+const supabase = createClient(
+  process.env.SUPABASE_PROJECT_URL,
+  process.env.SUPABASE_API_KEY
+);
+
+// 게시글 목록 불러오기
+app.get('/post', async (req, res) => {});
+
+// 게시글 상세보기
+app.get('/post/:id', async (req, res) => {});
+
+// 게시글 추가
+app.post('/post', async (req, res) => {});
+
+// 게시글 수정
+app.put('/post/:id', async (req, res) => {});
+
+// 게시글 삭제
+app.delete('/post/:id', async (req, res) => {});
+
+// 보드 불러오기
+app.get('/board', async (req, res) => {});
+
+// 보드 추가
+app.post('/board', async (req, res) => {});
+
+// 보드 수정
+app.put('/board/:id', async (req, res) => {});
+
+// 보드 삭제
+app.delete('/board/:id', async (req, res) => {});
 
 // 이미지 업로드
 app.post('/img', upload.single('img'), async (req, res) => {
