@@ -96,7 +96,17 @@ app.put('/post/:id', async (req, res) => {
 });
 
 // 게시글 삭제
-app.delete('/post/:id', async (req, res) => {});
+app.delete('/post/:id', async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('post')
+    .delete()
+    .eq('id', Number(id));
+
+  if (error) return res.status(500).json({ message: '게시글 삭제 실패' });
+
+  res.json({ message: '게시글 삭제 성공' });
+});
 
 // 게시판 목록 불러오기
 app.get('/board', async (req, res) => {});
