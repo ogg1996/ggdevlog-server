@@ -26,7 +26,7 @@ const supabase = createClient(
 
 // 게시글 목록 불러오기
 app.get('/post', async (req, res) => {
-  const board = Number(req.query.board_id) || null;
+  const boardName = req.query.board_name || 'all';
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 5;
 
@@ -35,19 +35,24 @@ app.get('/post', async (req, res) => {
 
   let query = supabase
     .from('post')
-    .select('id, thumbnail, title, description, created_at', { count: 'exact' })
+    .select(
+      'id, board:board_id!inner(id, name), thumbnail, title, description, created_at',
+      {
+        count: 'exact'
+      }
+    )
     .order('created_at', { ascending: false });
 
-  if (board) {
-    query = query.eq('board_id', board);
+  if (boardName !== 'all') {
+    query = query.eq('board.name', boardName);
   }
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) return res.status(500).json({ success: false });
+  if (error) return res.status(500).json({ message: '데이터 불러오기 실패' });
 
   res.json({
-    success: true,
+    board_name: boardName,
     page,
     limit,
     total: count,
@@ -61,7 +66,9 @@ app.get('/post/:id', async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase
     .from('post')
-    .select('*')
+    .select(
+      'id, board:board_id (id, name), title, description, thumbnail, content, images, created_at, updated_at'
+    )
     .eq('id', Number(id))
     .single();
 
@@ -72,16 +79,17 @@ app.get('/post/:id', async (req, res) => {
 // 게시글 추가
 app.post('/post', async (req, res) => {
   const { board_id, title, thumbnail, description, content, images } = req.body;
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('post')
-    .insert({ board_id, title, thumbnail, description, content, images });
+    .insert({ board_id, title, thumbnail, description, content, images })
+    .select();
 
   if (error)
     return res
       .status(500)
       .json({ success: false, message: '게시글 작성 실패' });
 
-  res.json({ success: true, message: '게시글 작성 성공' });
+  res.json({ success: true, message: '게시글 작성 성공', post_id: data[0].id });
 });
 
 // 게시글 수정
@@ -89,16 +97,17 @@ app.put('/post/:id', async (req, res) => {
   const { id } = req.params;
   const { board_id, title, thumbnail, description, content, images } = req.body;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('post')
     .update({ board_id, title, thumbnail, description, content, images })
-    .eq('id', Number(id));
+    .eq('id', Number(id))
+    .select();
 
   if (error)
     return res
       .status(500)
       .json({ success: false, message: '게시글 수정 실패' });
-  res.json({ success: true, message: '게시글 수정 성공' });
+  res.json({ success: true, message: '게시글 수정 성공', post_id: data[0].id });
 });
 
 // 게시글 삭제
@@ -116,9 +125,10 @@ app.delete('/post/:id', async (req, res) => {
 
 // 게시판 목록 불러오기
 app.get('/board', async (req, res) => {
-  const { data, error } = (
-    await supabase.from('board').select('id, name')
-  ).order('name', { ascending: true });
+  const { data, error } = await supabase
+    .from('board')
+    .select('id, name')
+    .order('name', { ascending: true });
 
   if (error) return res.status(500).json({ success: false });
   res.json({ success: true, data });
