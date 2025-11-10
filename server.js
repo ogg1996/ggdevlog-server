@@ -24,6 +24,23 @@ const supabase = createClient(
   process.env.SUPABASE_API_KEY
 );
 
+// 로그인
+app.get('/login', async (req, res) => {
+  const pw = req.query.pw;
+
+  if (pw === process.env.ADMIN_PW) {
+    res.json({
+      success: true,
+      message: '관리자 권한 승인'
+    });
+  } else {
+    res.json({
+      success: false,
+      message: '관리자 권한 승인 거부: 비밀번호 불일치'
+    });
+  }
+});
+
 // 게시글 목록 불러오기
 app.get('/post', async (req, res) => {
   const boardName = req.query.board_name || 'all';
