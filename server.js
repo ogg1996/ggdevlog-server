@@ -129,15 +129,34 @@ app.put('/post/:id', async (req, res) => {
 
 // 게시글 삭제
 app.delete('/post/:id', async (req, res) => {
-  const { id } = req.params;
-  const { error } = await supabase.from('post').delete().eq('id', Number(id));
+  try {
+    const { id } = req.params;
 
-  if (error)
-    return res
-      .status(500)
-      .json({ success: false, message: '게시글 삭제 실패' });
+    const { data } = await supabase
+      .from('post')
+      .select('id, board:board_id (id, name), thumbnail, images')
+      .eq('id', Number(id))
+      .single();
 
-  res.json({ success: true, message: '게시글 삭제 성공' });
+    if (data) {
+      await axios.delete('http://localhost:4050/img', {
+        data: [
+          ...(data.thumbnail ? [data.thumbnail.image_name] : []),
+          ...(data.images?.length ? data.images : [])
+        ]
+      });
+
+      await supabase.from('post').delete().eq('id', Number(id));
+
+      res.json({
+        success: true,
+        message: '게시글 삭제 성공',
+        board_name: data.board.name
+      });
+    }
+  } catch (e) {
+    res.status(500).json({ success: false, message: '게시글 삭제 실패' });
+  }
 });
 
 // 게시판 목록 불러오기
