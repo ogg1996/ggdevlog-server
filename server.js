@@ -7,12 +7,35 @@ import axios from 'axios';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import helmet from 'helmet';
+import bcrypt from 'bcrypt';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import jwt from 'jsonwebtoken';
 
-const app = express();
 const upload = multer({ dest: 'temp/' });
 
+const app = express();
+app.use(helmet());
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  })
+);
+
+// 로그인 횟수 제한
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  handler: (req, res) =>
+    res.json({
+      success: false,
+      message: '로그인 시도 횟수 초과'
+    })
+});
 
 const GITHUB_TOKEN = process.env.GITHUB_API_TOKEN;
 const OWNER = 'ogg1996';
@@ -24,21 +47,60 @@ const supabase = createClient(
   process.env.SUPABASE_API_KEY
 );
 
-// 로그인
-app.get('/login', async (req, res) => {
-  const pw = req.query.pw;
+// 토큰 검증
+function tokenValidation(req, res, next) {
+  const token = req.cookies.auth;
 
-  if (pw === process.env.ADMIN_PW) {
-    res.json({
-      success: true,
-      message: '관리자 권한 승인'
-    });
-  } else {
-    res.json({
-      success: false,
-      message: '관리자 권한 승인 거부: 비밀번호 불일치'
-    });
+  if (!token) return res.json({ success: false, message: '토큰이 없음' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.json({ success: false, message: '유효한 토큰이 아님' });
   }
+}
+
+// 로그인
+app.post('/login', loginLimiter, async (req, res) => {
+  try {
+    const { pw } = req.body;
+
+    const match = await bcrypt.compare(pw, process.env.ADMIN_PW_HASH);
+
+    if (!match)
+      return res.json({
+        success: false,
+        message: '비밀번호 불일치'
+      });
+
+    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, {
+      expiresIn: '6h'
+    });
+
+    res.cookie('auth', token, {
+      httpOnly: true,
+      secure: false, // 배포시 true로 변경
+      sameSite: 'strict',
+      maxAge: 6 * 60 * 60 * 1000
+    });
+
+    return res.json({ success: true, message: '관리자 권한 승인' });
+  } catch (e) {
+    return res.json({ success: false, message: '서버 오류' });
+  }
+});
+
+// 로그아웃
+app.post('/logout', (req, res) => {
+  res.clearCookie('auth');
+  res.json({ success: true, message: '로그아웃 성공' });
+});
+
+// 접근 권한 확인
+app.get('/accessCheck', tokenValidation, (req, res) => {
+  res.json({ success: true, message: '접근 승인' });
 });
 
 // 게시글 목록 불러오기
@@ -66,7 +128,7 @@ app.get('/post', async (req, res) => {
 
   const { data, error, count } = await query.range(from, to);
 
-  if (error) return res.status(500).json({ message: '데이터 불러오기 실패' });
+  if (error) return res.status(500).json({ message: '데이터베이스 오류' });
 
   res.json({
     board_name: boardName,
@@ -104,7 +166,7 @@ app.post('/post', async (req, res) => {
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시글 작성 실패' });
+      .json({ success: false, message: '데이터베이스 오류' });
 
   res.json({ success: true, message: '게시글 작성 성공', post_id: data[0].id });
 });
@@ -123,7 +185,7 @@ app.put('/post/:id', async (req, res) => {
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시글 수정 실패' });
+      .json({ success: false, message: '데이터베이스 오류' });
   res.json({ success: true, message: '게시글 수정 성공', post_id: data[0].id });
 });
 
@@ -155,7 +217,7 @@ app.delete('/post/:id', async (req, res) => {
       });
     }
   } catch (e) {
-    res.status(500).json({ success: false, message: '게시글 삭제 실패' });
+    res.status(500).json({ success: false, message: '데이터베이스 오류' });
   }
 });
 
@@ -166,7 +228,10 @@ app.get('/board', async (req, res) => {
     .select('id, name')
     .order('name', { ascending: true });
 
-  if (error) return res.status(500).json({ success: false });
+  if (error)
+    return res
+      .status(500)
+      .json({ success: false, message: '데이터베이스 오류' });
   res.json({ success: true, data });
 });
 
@@ -177,7 +242,7 @@ app.post('/board', async (req, res) => {
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시판 추가 실패' });
+      .json({ success: false, message: '데이터베이스 오류' });
   res.json({ success: true, message: '게시판 추가 성공' });
 });
 
@@ -192,7 +257,7 @@ app.put('/board/:id', async (req, res) => {
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시판 수정 실패' });
+      .json({ success: false, message: '데이터베이스 오류' });
   res.json({ success: true, message: '게시판 수정 성공' });
 });
 
@@ -203,7 +268,7 @@ app.delete('/board/:id', async (req, res) => {
   if (error)
     return res
       .status(500)
-      .json({ success: false, message: '게시판 삭제 실패' });
+      .json({ success: false, message: '데이터베이스 오류' });
   res.json({ success: true, message: '게시판 삭제 성공' });
 });
 
