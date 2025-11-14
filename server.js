@@ -103,6 +103,27 @@ app.get('/accessCheck', tokenValidation, (req, res) => {
   res.json({ success: true, message: '접근 승인' });
 });
 
+// 자기소개 데이터 불러오기
+app.get('/introduce', async (req, res) => {
+  const introduce = JSON.parse(
+    fs.readFileSync(process.env.INTRODUCE_FILE_PATH),
+    'utf-8'
+  );
+
+  res.json(introduce);
+});
+
+// 자기소개 데이터 수정하기
+app.put('/introduce', async (req, res) => {
+  const { content, images } = req.body;
+
+  fs.writeFileSync(
+    process.env.INTRODUCE_FILE_PATH,
+    JSON.stringify({ content, images }, null, 2)
+  );
+  res.json({ message: '자기소개 수정 완료', content, images });
+});
+
 // 게시글 목록 불러오기
 app.get('/post', async (req, res) => {
   const boardName = req.query.board_name || 'all';
