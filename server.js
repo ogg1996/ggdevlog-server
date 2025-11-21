@@ -103,6 +103,44 @@ app.get('/accessCheck', tokenValidation, (req, res) => {
   res.json({ success: true, message: '접근 승인' });
 });
 
+// 활동 데이터 불러오기
+app.get('/activity', async (req, res) => {
+  const filePath = process.env.ACTIVITY_FILE_PATH;
+
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify({}, null, 2));
+  }
+
+  const activity = JSON.parse(
+    fs.readFileSync(process.env.ACTIVITY_FILE_PATH),
+    'utf-8'
+  );
+
+  res.json(activity);
+});
+
+// 활동 카운트 증가
+app.post('/activity', async (req, res) => {
+  const filePath = process.env.ACTIVITY_FILE_PATH;
+
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, JSON.stringify({}, null, 2));
+  }
+
+  const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  raw[today] = (raw[today] || 0) + 1;
+
+  fs.writeFileSync(
+    process.env.ACTIVITY_FILE_PATH,
+    JSON.stringify(raw, null, 2)
+  );
+
+  res.json({ message: '활동 기록 카운트 증가 완료' });
+});
+
 // 자기소개 데이터 불러오기
 app.get('/introduce', async (req, res) => {
   const introduce = JSON.parse(
