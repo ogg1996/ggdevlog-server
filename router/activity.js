@@ -1,46 +1,31 @@
 import express from 'express';
-import fs from 'fs';
-import dotenv from 'dotenv';
-dotenv.config();
+
+import { requireEnv } from '../util/validateEnv.js';
+import { readJSON, writeJSON } from '../util/file.js';
+import { success } from '../util/response.js';
 
 const activityRouter = express.Router();
 
+const ACTIVITY_FILE_PATH = requireEnv('ACTIVITY_FILE_PATH');
+
 // 활동 데이터 불러오기
 activityRouter.get('/', async (req, res) => {
-  const filePath = process.env.ACTIVITY_FILE_PATH;
+  const data = await readJSON(ACTIVITY_FILE_PATH);
 
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}, null, 2));
-  }
-
-  const activity = JSON.parse(
-    fs.readFileSync(process.env.ACTIVITY_FILE_PATH),
-    'utf-8'
-  );
-
-  res.json(activity);
+  success(res, '활동 데이터 로드 성공', data);
 });
 
 // 활동 카운트 증가
 activityRouter.post('/', async (req, res) => {
-  const filePath = process.env.ACTIVITY_FILE_PATH;
-
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}, null, 2));
-  }
-
-  const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const data = await readJSON(ACTIVITY_FILE_PATH);
 
   const today = new Date().toISOString().slice(0, 10);
 
-  raw[today] = (raw[today] || 0) + 1;
+  data[today] = (data[today] || 0) + 1;
 
-  fs.writeFileSync(
-    process.env.ACTIVITY_FILE_PATH,
-    JSON.stringify(raw, null, 2)
-  );
+  await writeJSON(ACTIVITY_FILE_PATH, data);
 
-  res.json({ message: '활동 기록 카운트 증가 완료' });
+  success(res, '활동 기록 카운트 증가 완료');
 });
 
 export default activityRouter;
