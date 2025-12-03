@@ -1,6 +1,7 @@
 import express from 'express';
 
-import { requireEnv } from '../util/validateEnv.js';
+import { requireEnv } from '../util/requireEnv.js';
+import { validateToken } from '../util/validateToken.js';
 import { success } from '../util/response.js';
 import { readJSON, writeJSON } from '../util/file.js';
 
@@ -15,7 +16,7 @@ introduceRouter.get('/', async (req, res) => {
 });
 
 // 자기소개 수정하기
-introduceRouter.put('/', async (req, res) => {
+introduceRouter.put('/', validateToken, async (req, res) => {
   const { content, images } = req.body;
 
   await writeJSON(INTRODUCE_FILE_PATH, { content, images });

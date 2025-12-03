@@ -1,6 +1,7 @@
 import express from 'express';
 
-import { requireEnv } from '../util/validateEnv.js';
+import { requireEnv } from '../util/requireEnv.js';
+import { validateToken } from '../util/validateToken.js';
 import { readJSON, writeJSON } from '../util/file.js';
 import { success } from '../util/response.js';
 
@@ -14,7 +15,8 @@ activityRouter.get('/', async (req, res) => {
   success(res, '활동 데이터 로드 성공', data);
 });
 
-activityRouter.post('/', async (req, res) => {
+// 활동 카운트 증가
+activityRouter.post('/', validateToken, async (req, res) => {
   const data = await readJSON(ACTIVITY_FILE_PATH);
 
   const today = new Date().toISOString().slice(0, 10);

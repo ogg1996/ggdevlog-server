@@ -1,6 +1,7 @@
 import express from 'express';
 import supabase from '../supabase/client.js';
 
+import { validateToken } from '../util/validateToken.js';
 import { fail, success } from '../util/response.js';
 
 const boardRouter = express.Router();
@@ -17,7 +18,7 @@ boardRouter.get('/', async (req, res) => {
 });
 
 // 게시판 추가
-boardRouter.post('/', async (req, res) => {
+boardRouter.post('/', validateToken, async (req, res) => {
   const { name } = req.body;
   const { error } = await supabase.from('board').insert({ name });
 
@@ -26,7 +27,7 @@ boardRouter.post('/', async (req, res) => {
 });
 
 // 게시판 수정
-boardRouter.put('/:id', async (req, res) => {
+boardRouter.put('/:id', validateToken, async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
 
@@ -40,7 +41,7 @@ boardRouter.put('/:id', async (req, res) => {
 });
 
 // 게시판 삭제
-boardRouter.delete('/:id', async (req, res) => {
+boardRouter.delete('/:id', validateToken, async (req, res) => {
   const { id } = req.params;
   const { error } = await supabase.from('board').delete().eq('id', Number(id));
 
