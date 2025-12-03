@@ -8,14 +8,12 @@ const activityRouter = express.Router();
 
 const ACTIVITY_FILE_PATH = requireEnv('ACTIVITY_FILE_PATH');
 
-// 활동 데이터 불러오기
 activityRouter.get('/', async (req, res) => {
   const data = await readJSON(ACTIVITY_FILE_PATH);
 
   success(res, '활동 데이터 로드 성공', data);
 });
 
-// 활동 카운트 증가
 activityRouter.post('/', async (req, res) => {
   const data = await readJSON(ACTIVITY_FILE_PATH);
 

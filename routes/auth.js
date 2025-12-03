@@ -12,7 +12,7 @@ const JWT_SECRET = requireEnv('JWT_SECRET');
 const ADMIN_PW_HASH = requireEnv('ADMIN_PW_HASH');
 
 // 토큰 검증 미들웨어
-function tokenValidation(req, res, next) {
+export function tokenValidation(req, res, next) {
   const token = req.cookies.auth;
 
   if (!token) return fail(res, '인증 토큰 없음', 401);
