@@ -5,12 +5,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import authRouter from './router/auth.js';
-import boardRouter from './router/board.js';
-import postRouter from './router/post.js';
-import imgRouter from './router/img.js';
-import activityRouter from './router/activity.js';
-import introduceRouter from './router/introduce.js';
+import authRouter from './routes/auth.js';
+import boardRouter from './routes/board.js';
+import postRouter from './routes/post.js';
+import imgRouter from './routes/img.js';
+import activityRouter from './routes/activity.js';
+import introduceRouter from './routes/introduce.js';
+import { specs, swaggerUi } from './swagger.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(
   })
 );
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/auth', authRouter);
 app.use('/activity', activityRouter);
 app.use('/introduce', introduceRouter);
