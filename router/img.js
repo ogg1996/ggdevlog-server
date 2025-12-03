@@ -4,7 +4,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import axios from 'axios';
 
-import { requireEnv } from '../util/validateEnv.js';
+import { validateToken } from '../util/validateToken.js';
+import { requireEnv } from '../util/requireEnv.js';
 import { success, fail } from '../util/response.js';
 
 const imgRouter = express.Router();
@@ -16,7 +17,7 @@ const REPO = 'ggdevlog-img-uploads';
 const BRANCH = 'main';
 
 // 이미지 업로드
-imgRouter.post('/', upload.single('img'), async (req, res) => {
+imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
   try {
     const ext = path.extname(req.file.originalname);
     const fileName = `img_${Date.now()}${ext}`;
@@ -53,7 +54,7 @@ imgRouter.post('/', upload.single('img'), async (req, res) => {
 });
 
 // 이미지 삭제
-imgRouter.delete('/', async (req, res) => {
+imgRouter.delete('/', validateToken, async (req, res) => {
   try {
     const images = req.body;
 

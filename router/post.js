@@ -1,6 +1,8 @@
 import express from 'express';
 import supabase from '../supabase/client.js';
 import axios from 'axios';
+
+import { validateToken } from '../util/validateToken.js';
 import { fail, success } from '../util/response.js';
 
 const postRouter = express.Router();
@@ -56,7 +58,7 @@ postRouter.get('/:id', async (req, res) => {
 });
 
 // 게시글 추가
-postRouter.post('/', async (req, res) => {
+postRouter.post('/', validateToken, async (req, res) => {
   const { board_id, title, thumbnail, description, content, images } = req.body;
   const { data, error } = await supabase
     .from('post')
@@ -69,7 +71,7 @@ postRouter.post('/', async (req, res) => {
 });
 
 // 게시글 수정
-postRouter.put('/:id', async (req, res) => {
+postRouter.put('/:id', validateToken, async (req, res) => {
   const { id } = req.params;
   const { board_id, title, thumbnail, description, content, images } = req.body;
 
@@ -85,7 +87,7 @@ postRouter.put('/:id', async (req, res) => {
 });
 
 // 게시글 삭제
-postRouter.delete('/:id', async (req, res) => {
+postRouter.delete('/:id', validateToken, async (req, res) => {
   const { id } = req.params;
 
   const { data, error } = await supabase
