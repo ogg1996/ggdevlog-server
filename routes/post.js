@@ -529,6 +529,10 @@ postRouter.put('/:id', validateToken, async (req, res) => {
 postRouter.delete('/:id', validateToken, async (req, res) => {
   const { id } = req.params;
 
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const baseUrl = `${protocol}://${host}`;
+
   const { data, error } = await supabase
     .from('post')
     .select('id, board:board_id (id, name), thumbnail, images')
@@ -537,12 +541,14 @@ postRouter.delete('/:id', validateToken, async (req, res) => {
 
   if (error || !data) return fail(res, '존재하지 않는 게시글', 404);
 
-  // 배포시 url 수정
-  await axios.delete('http://localhost:4050/img', {
+  await axios.delete(`${baseUrl}/img`, {
     data: [
       ...(data.thumbnail ? [data.thumbnail.image_name] : []),
       ...(data.images?.length ? data.images : [])
-    ]
+    ],
+    headers: {
+      Cookie: req.headers.cookie
+    }
   });
 
   await supabase.from('post').delete().eq('id', Number(id));

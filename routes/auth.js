@@ -12,6 +12,12 @@ const authRouter = express.Router();
 const JWT_SECRET = requireEnv('JWT_SECRET');
 const ADMIN_PW_HASH = requireEnv('ADMIN_PW_HASH');
 
+const COOKIE_SETTINGS = {
+  httpOnly: true,
+  secure: false,
+  sameSite: 'none'
+};
+
 // 로그인 횟수 제한
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -145,9 +151,7 @@ authRouter.post('/login', loginLimiter, async (req, res) => {
   });
 
   res.cookie('auth', token, {
-    httpOnly: true,
-    secure: false, // 배포시 true로 변경
-    sameSite: 'strict',
+    ...COOKIE_SETTINGS,
     maxAge: 6 * 60 * 60 * 1000
   });
 
@@ -177,11 +181,7 @@ authRouter.post('/login', loginLimiter, async (req, res) => {
  *                  example: "관리자 권한 해제"
  */
 authRouter.post('/logout', (req, res) => {
-  res.clearCookie('auth', {
-    httpOnly: true,
-    secure: false, // 배포 시 true로 변경
-    sameSite: 'strict'
-  });
+  res.clearCookie('auth', COOKIE_SETTINGS);
   success(res, '관리자 권한 해제');
 });
 
