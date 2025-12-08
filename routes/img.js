@@ -9,7 +9,7 @@ import { requireEnv } from '../util/requireEnv.js';
 import { success, fail } from '../util/response.js';
 
 const imgRouter = express.Router();
-const upload = multer({ dest: 'temp/' });
+const upload = multer({ storage: multer.memoryStorage() });
 
 const GITHUB_TOKEN = requireEnv('GITHUB_API_TOKEN');
 const OWNER = 'ogg1996';
@@ -97,10 +97,8 @@ imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
   try {
     const ext = path.extname(req.file.originalname);
     const fileName = `img_${Date.now()}${ext}`;
-    const tempPath = req.file.path;
 
-    const base64 = (await fs.readFile(tempPath)).toString('base64');
-    await fs.unlink(tempPath);
+    const base64 = req.file.buffer.toString('base64');
 
     const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/images/${fileName}`;
 
