@@ -63,16 +63,14 @@ const introduceRouter = express.Router();
 introduceRouter.get('/', async (req, res) => {
   const { data, error } = await supabase
     .from('introduce')
-    .select('content', 'images')
+    .select('content, images')
     .eq('id', 1)
     .single();
+  console.log(data);
 
   if (error) return fail(res, 'DB 오류', 500);
 
-  success(res, '자기소개 조회 성공', {
-    content: data.content ?? '',
-    images: data.images ?? []
-  });
+  success(res, '자기소개 조회 성공', data);
 });
 
 /**
