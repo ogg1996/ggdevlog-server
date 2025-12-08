@@ -35,6 +35,10 @@ app.use('/board', boardRouter);
 app.use('/post', postRouter);
 app.use('/img', imgRouter);
 
+app.get('/', (req, res) => {
+  res.send('GGDevLog Server!');
+});
+
 app.listen(app.get('port'), () => {
   console.log(`Server port number: ${app.get('port')}`);
 });

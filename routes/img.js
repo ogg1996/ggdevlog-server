@@ -16,7 +16,83 @@ const OWNER = 'ogg1996';
 const REPO = 'ggdevlog-img-uploads';
 const BRANCH = 'main';
 
-// 이미지 업로드
+/**
+ * @swagger
+ * tags:
+ *  - name: Img
+ *    description: 이미지 관련 API
+ */
+
+/**
+ * @swagger
+ * /img:
+ *  post:
+ *    tags: [Img]
+ *    summary: 이미지 업로드
+ *    description: 저장소에 이미지를 업로드한다.
+ *    security:
+ *      - cookieAuth: []
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              img:
+ *                description: 이미지 파일
+ *            required:
+ *              - img
+ *    responses:
+ *      200:
+ *        description: 이미지 업로드 성공
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: true
+ *                message:
+ *                  type: string
+ *                  example: "이미지 업로드 성공"
+ *                data:
+ *                  type: object
+ *                  properties:
+ *                    img_name:
+ *                      type: string
+ *                      example: "img_1232141412.png"
+ *                    img_url:
+ *                      type: string
+ *                      example: "https://example.com/img_1232141412.png"
+ *      401:
+ *        description: 토큰 인증 실패
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "인증 토큰 없음 or 유효하지 않은 인증 토큰"
+ *      500:
+ *        description: 이미지 업로드 실패
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "이미지 업로드 실패"
+ */
 imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
   try {
     const ext = path.extname(req.file.originalname);
@@ -53,7 +129,70 @@ imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
   }
 });
 
-// 이미지 삭제
+/**
+ * @swagger
+ * /img:
+ *  delete:
+ *    tags: [Img]
+ *    summary: 이미지 삭제
+ *    description: 저장소에서 이미지를 삭제한다.
+ *    security:
+ *      - cookieAuth: []
+ *    requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - images
+ *             properties:
+ *               images:
+ *                 type: array
+ *                 description: 삭제할 이미지 목록
+ *           example:
+ *             images: ["img_1232141412.png"]
+ *    responses:
+ *      200:
+ *        description: 이미지 삭제 성공
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: true
+ *                message:
+ *                  type: string
+ *                  example: "이미지 삭제 성공"
+ *      401:
+ *        description: 토큰 인증 실패
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "인증 토큰 없음 or 유효하지 않은 인증 토큰"
+ *      500:
+ *        description: 이미지 삭제 실패
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "이미지 삭제 실패"
+ */
 imgRouter.delete('/', validateToken, async (req, res) => {
   try {
     const images = req.body;
