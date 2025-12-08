@@ -1,8 +1,7 @@
 import express from 'express';
 import multer from 'multer';
-import fs from 'fs/promises';
 import path from 'path';
-import axios from 'axios';
+import supabase from '../supabase/client.js';
 
 import { validateToken } from '../util/validateToken.js';
 import { requireEnv } from '../util/requireEnv.js';
@@ -94,37 +93,24 @@ const BRANCH = 'main';
  *                  example: "이미지 업로드 실패"
  */
 imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
-  try {
-    const ext = path.extname(req.file.originalname);
-    const fileName = `img_${Date.now()}${ext}`;
+  const ext = path.extname(req.file.originalname);
+  const fileName = `img_${Date.now()}${ext}`;
+  const filePath = `images/${fileName}`;
 
-    const base64 = req.file.buffer.toString('base64');
-
-    const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/images/${fileName}`;
-
-    const imageUrl = await axios
-      .put(
-        url,
-        {
-          message: `upload image: ${fileName}`,
-          content: base64,
-          branch: BRANCH
-        },
-        {
-          headers: {
-            Authorization: `token ${GITHUB_TOKEN}`
-          }
-        }
-      )
-      .then(res => res.data.content.download_url);
-
-    success(res, '이미지 업로드 성공', {
-      img_name: fileName,
-      img_url: imageUrl
+  const { error } = await supabase.storage
+    .from('images')
+    .upload(filePath, req.file.buffer, {
+      contentType: req.file.mimetype
     });
-  } catch {
-    fail(res, '이미지 업로드 실패', 500);
-  }
+
+  if (error) return fail(res, '이미지 업로드 실패', 500);
+
+  const { data } = await supabase.storage.from('images').getPublicUrl(filePath);
+
+  success(res, '이미지 업로드 성공', {
+    img_name: fileName,
+    img_url: data.publicUrl
+  });
 });
 
 /**
@@ -192,29 +178,15 @@ imgRouter.post('/', validateToken, upload.single('img'), async (req, res) => {
  *                  example: "이미지 삭제 실패"
  */
 imgRouter.delete('/', validateToken, async (req, res) => {
-  try {
-    const images = req.body;
+  const images = req.body;
 
-    for (const image of images) {
-      const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/images/${image}`;
+  const filesToDelete = images.map(image => `images/${image}`);
 
-      const shaRes = await axios.get(url + `?ref=${BRANCH}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` }
-      });
+  const { error } = await supabase.storage.from('images').remove(filesToDelete);
 
-      await axios.delete(url, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` },
-        data: {
-          message: `delete image: ${image}`,
-          sha: shaRes.data.sha,
-          branch: BRANCH
-        }
-      });
-    }
-    success(res, '이미지 삭제 성공');
-  } catch {
-    fail(res, '이미지 삭제 실패', 500);
-  }
+  if (error) return fail(res, '이미지 삭제 실패', 500);
+
+  success(res, '이미지 삭제 성공');
 });
 
 export default imgRouter;
