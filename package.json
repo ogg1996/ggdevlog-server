@@ -8,7 +8,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "strat": "node main.js"
+    "start": "node main.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
