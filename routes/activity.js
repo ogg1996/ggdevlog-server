@@ -1,13 +1,10 @@
 import express from 'express';
+import supabase from '../supabase/client.js';
 
-import { requireEnv } from '../util/requireEnv.js';
 import { validateToken } from '../util/validateToken.js';
-import { readJSON, writeJSON } from '../util/file.js';
-import { success } from '../util/response.js';
+import { fail, success } from '../util/response.js';
 
 const activityRouter = express.Router();
-
-const ACTIVITY_FILE_PATH = requireEnv('ACTIVITY_FILE_PATH');
 
 /**
  * @swagger
@@ -39,15 +36,31 @@ const ACTIVITY_FILE_PATH = requireEnv('ACTIVITY_FILE_PATH');
  *                  example: "활동 데이터 조회 성공"
  *                data:
  *                  type: object
- *                  additionalProperties:
- *                    type: integer
- *                  example:
- *                    "2025-01-01": 3
- *                    "2025-01-02": 5
- *
+ *                  properties:
+ *                    date:
+ *                      type: string
+ *                      example: "2025-01-01"
+ *                    count:
+ *                      type: number
+ *                      example: 1
+ *      500:
+ *        description: DB 오류
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "DB 오류"
  */
 activityRouter.get('/', async (req, res) => {
-  const data = await readJSON(ACTIVITY_FILE_PATH);
+  const { data, error } = await supabase.from('activity').select('date, count');
+
+  if (error) return fail(res, 'DB오류', 500);
 
   success(res, '활동 데이터 조회 성공', data);
 });
@@ -88,15 +101,47 @@ activityRouter.get('/', async (req, res) => {
  *                message:
  *                  type: string
  *                  example: "인증 토큰 없음 or 유효하지 않은 인증 토큰"
+ *      500:
+ *        description: DB 오류
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "DB 오류"
  */
 activityRouter.post('/', validateToken, async (req, res) => {
-  const data = await readJSON(ACTIVITY_FILE_PATH);
-
   const today = new Date().toISOString().slice(0, 10);
 
-  data[today] = (data[today] || 0) + 1;
+  const { data: readData, error: readError } = await supabase
+    .from('activity')
+    .select('count')
+    .eq('date', today)
+    .single();
 
-  await writeJSON(ACTIVITY_FILE_PATH, data);
+  if (readError && readError.code !== 'PGRST116')
+    return fail(res, 'DB오류', 500);
+
+  let updateResponse;
+
+  if (readData) {
+    updateResponse = await supabase
+      .from('activity')
+      .update({ count: readData.count + 1 })
+      .eq('date', today);
+  } else {
+    console.log('인서트');
+    updateResponse = await supabase
+      .from('activity')
+      .insert({ date: today, count: 1 });
+  }
+
+  if (updateResponse.error) return fail(res, 'DB오류', 500);
 
   success(res, '활동 카운트 증가 완료');
 });

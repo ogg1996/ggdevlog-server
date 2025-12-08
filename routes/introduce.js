@@ -1,13 +1,10 @@
 import express from 'express';
+import supabase from '../supabase/client.js';
 
-import { requireEnv } from '../util/requireEnv.js';
 import { validateToken } from '../util/validateToken.js';
-import { success } from '../util/response.js';
-import { readJSON, writeJSON } from '../util/file.js';
+import { fail, success } from '../util/response.js';
 
 const introduceRouter = express.Router();
-
-const INTRODUCE_FILE_PATH = requireEnv('INTRODUCE_FILE_PATH');
 
 /**
  * @swagger
@@ -48,11 +45,34 @@ const INTRODUCE_FILE_PATH = requireEnv('INTRODUCE_FILE_PATH');
  *                      items:
  *                        type: string
  *                        example: "img_1232141412.png"
+ *      500:
+ *        description: DB 오류
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "DB 오류"
  *
  */
 introduceRouter.get('/', async (req, res) => {
-  const data = await readJSON(INTRODUCE_FILE_PATH);
-  success(res, '자기소개 조회 성공', data);
+  const { data, error } = await supabase
+    .from('introduce')
+    .select('content', 'images')
+    .eq('id', 1)
+    .single();
+
+  if (error) return fail(res, 'DB 오류', 500);
+
+  success(res, '자기소개 조회 성공', {
+    content: data.content ?? '',
+    images: data.images ?? []
+  });
 });
 
 /**
@@ -121,11 +141,30 @@ introduceRouter.get('/', async (req, res) => {
  *                message:
  *                  type: string
  *                  example: "인증 토큰 없음 or 유효하지 않은 인증 토큰"
+ *      500:
+ *        description: DB 오류
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                success:
+ *                  type: boolean
+ *                  example: false
+ *                message:
+ *                  type: string
+ *                  example: "DB 오류"
  */
 introduceRouter.put('/', validateToken, async (req, res) => {
   const { content, images } = req.body;
 
-  await writeJSON(INTRODUCE_FILE_PATH, { content, images });
+  const { error } = await supabase
+    .from('introduce')
+    .update({ content, images })
+    .eq('id', 1);
+
+  if (error) return fail(res, 'DB 오류', 500);
+
   success(res, '자기소개 수정 완료', { content, images });
 });
 
