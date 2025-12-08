@@ -66,7 +66,6 @@ introduceRouter.get('/', async (req, res) => {
     .select('content, images')
     .eq('id', 1)
     .single();
-  console.log(data);
 
   if (error) return fail(res, 'DB 오류', 500);
 
