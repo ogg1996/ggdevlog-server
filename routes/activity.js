@@ -116,7 +116,11 @@ activityRouter.get('/', async (req, res) => {
  *                  example: "DB 오류"
  */
 activityRouter.post('/', validateToken, async (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date(
+    new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })
+  )
+    .toISOString()
+    .slice(0, 10);
 
   const { data: readData, error: readError } = await supabase
     .from('activity')
