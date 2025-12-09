@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { requireEnv } from './util/requireEnv.js';
+
 import authRouter from './routes/auth.js';
 import boardRouter from './routes/board.js';
 import postRouter from './routes/post.js';
@@ -15,6 +17,8 @@ import { specs, swaggerUi } from './swagger.js';
 
 const app = express();
 
+const CLIENT_URL = requireEnv('CLIENT_URL');
+
 app.set('port', process.env.PORT || 3000);
 
 app.use(helmet());
@@ -22,7 +26,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', CLIENT_URL],
     credentials: true
   })
 );
