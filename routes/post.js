@@ -541,15 +541,17 @@ postRouter.delete('/:id', validateToken, async (req, res) => {
 
   if (error || !data) return fail(res, '존재하지 않는 게시글', 404);
 
-  await axios.delete(`${baseUrl}/img`, {
-    data: [
-      ...(data.thumbnail ? [data.thumbnail.image_name] : []),
-      ...(data.images?.length ? data.images : [])
-    ],
-    headers: {
-      Cookie: req.headers.cookie
-    }
-  });
+  if (data.thumbnail || data.images.length !== 0) {
+    await axios.delete(`${baseUrl}/img`, {
+      data: [
+        ...(data.thumbnail ? [data.thumbnail.image_name] : []),
+        ...(data.images?.length ? data.images : [])
+      ],
+      headers: {
+        Cookie: req.headers.cookie
+      }
+    });
+  }
 
   await supabase.from('post').delete().eq('id', Number(id));
 

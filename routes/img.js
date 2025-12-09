@@ -4,16 +4,10 @@ import path from 'path';
 import supabase from '../supabase/client.js';
 
 import { validateToken } from '../util/validateToken.js';
-import { requireEnv } from '../util/requireEnv.js';
 import { success, fail } from '../util/response.js';
 
 const imgRouter = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
-
-const GITHUB_TOKEN = requireEnv('GITHUB_API_TOKEN');
-const OWNER = 'ogg1996';
-const REPO = 'ggdevlog-img-uploads';
-const BRANCH = 'main';
 
 /**
  * @swagger

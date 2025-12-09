@@ -14,8 +14,8 @@ const ADMIN_PW_HASH = requireEnv('ADMIN_PW_HASH');
 
 const COOKIE_SETTINGS = {
   httpOnly: true,
-  secure: false,
-  sameSite: 'strict'
+  secure: true,
+  sameSite: 'none'
 };
 
 // 로그인 횟수 제한

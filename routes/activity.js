@@ -135,7 +135,6 @@ activityRouter.post('/', validateToken, async (req, res) => {
       .update({ count: readData.count + 1 })
       .eq('date', today);
   } else {
-    console.log('인서트');
     updateResponse = await supabase
       .from('activity')
       .insert({ date: today, count: 1 });
