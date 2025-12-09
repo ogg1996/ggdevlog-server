@@ -1,8 +1,9 @@
 import express from 'express';
 import supabase from '../supabase/client.js';
 
-import { validateToken } from '../util/validateToken.js';
-import { fail, success } from '../util/response.js';
+import dayjs from '../utils/dayjs.js';
+import { validateToken } from '../utils/validateToken.js';
+import { fail, success } from '../utils/response.js';
 
 const activityRouter = express.Router();
 
@@ -116,7 +117,7 @@ activityRouter.get('/', async (req, res) => {
  *                  example: "DB 오류"
  */
 activityRouter.post('/', validateToken, async (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dayjs().tz().format('YYYY-MM-DD');
 
   const { data: readData, error: readError } = await supabase
     .from('activity')
