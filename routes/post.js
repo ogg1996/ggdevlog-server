@@ -157,7 +157,7 @@ postRouter.get('/', async (req, res) => {
  *  get:
  *    tags: [Post]
  *    summary: 게시글 상세 조회
- *    description: 게시글의 상세 데이터를 불러온다.
+ *    description: 게시글의 상세 데이터를 JSON 형식의 에디터 콘텐츠로 불러온다.
  *    parameters:
  *      - in: path
  *        name: id
@@ -199,19 +199,29 @@ postRouter.get('/', async (req, res) => {
  *                      type: string
  *                      example: "게시글의 설명입니다."
  *                    content:
- *                      type: string
- *                      example: "<h2>임시 에디터를 작성 했습니다.</h2>"
+ *                      type: object
+ *                      description: 에디터 JSON 데이터
+ *                      example:
+ *                        type: doc
+ *                        content:
+ *                          - type: heading
+ *                            attrs:
+ *                              level: 2
+ *                            content:
+ *                              - type: text
+ *                                text: "임시 에디터를 작성했습니다."
  *                    created_at:
  *                      type: string
- *                      example: "2025-01-01T00:00:00. 07945+00:00"
+ *                      example: "2025-01-01T00:00:00.07945+00:00"
  *                    updated_at:
  *                      type: string
- *                      example: "2025-02-01T00:00:00. 07945+00:00"
+ *                      example: "2025-02-01T00:00:00.07945+00:00"
  *                    images:
  *                      type: array
  *                      items:
  *                        type: string
- *                        example: "img_1232141412.png"
+ *                      example:
+ *                        - "img_1232141412.png"
  *                    thumbnail:
  *                      type: object
  *                      properties:
@@ -285,18 +295,29 @@ postRouter.get('/:id', async (req, res) => {
  *                 type: string
  *                 description: 게시글의 간단한 설명
  *               content:
- *                 type: string
- *                 description: HTML TEXT
+ *                 type: object
+ *                 description: HTML JSON
  *               images:
  *                 type: array
  *                 description: 게시글에 들어간 이미지 목록
  *           example:
  *             board_id: 1
- *             title: "게시글의 제목입니다"
- *             thumbnail: { img_name: "img_1232141412.png", img_url: "https://example.com/img_1232141412.png" }
- *             description: "게시글의 설명입니다."
- *             content: "<h2>임시 에디터를 작성 했습니다.</h2>"
- *             images: ["img_1232141412.png"]
+ *             title: 게시글의 제목입니다
+ *             thumbnail:
+ *               img_name: img_1232141412.png
+ *               img_url: https://example.com/img_1232141412.png
+ *             description: 게시글의 설명입니다.
+ *             content:
+ *               type: doc
+ *               content:
+ *                 - type: heading
+ *                   attrs:
+ *                     level: 2
+ *                   content:
+ *                     - type: text
+ *                       text: 임시 에디터를 작성했습니다.
+ *             images:
+ *               - img_1232141412.png
  *    responses:
  *      200:
  *        description: 게시글 추가 성공
@@ -397,18 +418,29 @@ postRouter.post('/', validateToken, async (req, res) => {
  *                 type: string
  *                 description: 게시글의 간단한 설명
  *               content:
- *                 type: string
- *                 description: HTML TEXT
+ *                 type: object
+ *                 description: HTML JSON
  *               images:
  *                 type: array
  *                 description: 게시글에 들어간 이미지 목록
  *           example:
  *             board_id: 1
- *             title: "게시글의 제목입니다"
- *             thumbnail: { img_name: "img_1232141412.png", img_url: "https://example.com/img_1232141412.png" }
- *             description: "게시글의 설명입니다."
- *             content: "<h2>임시 에디터를 작성 했습니다.</h2>"
- *             images: ["img_1232141412.png"]
+ *             title: 게시글의 제목입니다
+ *             thumbnail:
+ *               img_name: img_1232141412.png
+ *               img_url: https://example.com/img_1232141412.png
+ *             description: 게시글의 설명입니다.
+ *             content:
+ *               type: doc
+ *               content:
+ *                 - type: heading
+ *                   attrs:
+ *                     level: 2
+ *                   content:
+ *                     - type: text
+ *                       text: 임시 에디터를 작성했습니다.
+ *             images:
+ *               - img_1232141412.png
  *    responses:
  *      200:
  *        description: 게시글 수정 성공

@@ -38,13 +38,23 @@ const introduceRouter = express.Router();
  *                  type: object
  *                  properties:
  *                    content:
- *                      type: string
- *                      example: "<h2>임시 에디터를 작성 했습니다.</h2>"
+ *                      type: object
+ *                      description: 저장된 에디터 JSON 데이터
+ *                      example:
+ *                        type: doc
+ *                        content:
+ *                          - type: heading
+ *                            attrs:
+ *                              level: 2
+ *                            content:
+ *                              - type: text
+ *                                text: "임시 에디터를 작성했습니다."
  *                    images:
  *                      type: array
  *                      items:
  *                        type: string
- *                        example: "img_1232141412.png"
+ *                        example:
+ *                          - "img_1232141412.png"
  *      500:
  *        description: DB 오류
  *        content:
@@ -78,28 +88,38 @@ introduceRouter.get('/', async (req, res) => {
  *  put:
  *    tags: [Introduce]
  *    summary: 자기소개 수정
- *    description: 자기소개를 수정한다.
+ *    description: 자기소개를 JSON 형식의 에디터 데이터로 수정한다.
  *    security:
  *      - cookieAuth: []
  *    requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - content
- *               - images
- *             properties:
- *               content:
- *                 type: string
- *                 description: HTML TEXT
- *               images:
- *                 type: array
- *                 description: 자기소개 데이터에 들어간 이미지 목록
- *           example:
- *             content: "<h2>임시 에디터를 작성 했습니다.</h2>"
- *             images: ["img_1232141412.png"]
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            required:
+ *              - content
+ *              - images
+ *            properties:
+ *              content:
+ *                type: object
+ *                description: 에디터 JSON 데이터
+ *                example:
+ *                  type: doc
+ *                  content:
+ *                    - type: heading
+ *                      attrs:
+ *                        level: 2
+ *                      content:
+ *                        - type: text
+ *                          text: "임시 에디터를 작성했습니다."
+ *              images:
+ *                type: array
+ *                description: 자기소개 데이터에 포함된 이미지 파일 목록
+ *                items:
+ *                  type: string
+ *                example:
+ *                  - "img_1232141412.png"
  *    responses:
  *      200:
  *        description: 자기소개 수정 완료
@@ -118,13 +138,23 @@ introduceRouter.get('/', async (req, res) => {
  *                  type: object
  *                  properties:
  *                    content:
- *                      type: string
- *                      example: "<h2>임시 에디로 에디터를 작성 했습니다.</h2>"
+ *                      type: object
+ *                      description: 저장된 에디터 JSON 데이터
+ *                      example:
+ *                        type: doc
+ *                        content:
+ *                          - type: heading
+ *                            attrs:
+ *                              level: 2
+ *                            content:
+ *                              - type: text
+ *                                text: "임시 에디터를 작성했습니다."
  *                    images:
  *                      type: array
  *                      items:
  *                        type: string
- *                        example: "img_1232141412.png"
+ *                        example:
+ *                          - "img_1232141412.png"
  *      401:
  *        description: 토큰 인증 실패
  *        content:
@@ -152,6 +182,7 @@ introduceRouter.get('/', async (req, res) => {
  *                  type: string
  *                  example: "DB 오류"
  */
+
 introduceRouter.put('/', validateToken, async (req, res) => {
   const { content, images } = req.body;
 
